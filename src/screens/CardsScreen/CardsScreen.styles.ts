@@ -1,4 +1,9 @@
 import { StyleSheet } from 'react-native';
+import {
+  PAGE_PADDING_HORIZONTAL,
+  PAGE_PADDING_BOTTOM,
+  HEADER_CONTENT_GAP,
+} from '../../theme/layout';
 
 export const styles = StyleSheet.create({
   content: {
@@ -6,9 +11,9 @@ export const styles = StyleSheet.create({
   },
 
   contentInner: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-    gap: 16,
+    paddingHorizontal: PAGE_PADDING_HORIZONTAL,
+    paddingBottom: PAGE_PADDING_BOTTOM,
+    gap: HEADER_CONTENT_GAP,
   },
 
   /* ---------- HEADER ---------- */
@@ -23,36 +28,12 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  toggle: {
-    height: 36,
-    width: 108,
-    borderRadius: 18,
-    padding: 4,
-    flexDirection: 'row',
-    gap: 4,
-  },
-
-  toggleLight: {
-    flex: 1,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  toggleDark: {
-    flex: 1,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
   /* ---------- CARD ---------- */
   bigCard: {
     backgroundColor: '#ff0000',
     width: '100%',
     height: 648,
     borderRadius: 20,
-    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
@@ -79,24 +60,5 @@ export const styles = StyleSheet.create({
   
   gradientFill: {
     flex: 1,
-  },
-
-  editBtn: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 10,
-  },
-  
-  editBtnText: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '700',
   },
 });

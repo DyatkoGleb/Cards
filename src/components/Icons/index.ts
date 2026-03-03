@@ -1,0 +1,10 @@
+export { IconClose } from './IconClose';
+export { IconEdit } from './IconEdit';
+export { IconChat } from './IconChat';
+export { IconCheck } from './IconCheck';
+export { IconTrash } from './IconTrash';
+export { IconArrowLeft } from './IconArrowLeft';
+export { IconArrowRight } from './IconArrowRight';
+export { IconPlus } from './IconPlus';
+export { IconCards } from './IconCards';
+export { IconProfile } from './IconProfile';

@@ -1,4 +1,7 @@
-export const lightPalette = {
+import type { Palette } from '../types/palette';
+
+/** Светлая тема */
+export const lightPalette: Palette = {
     page: '#F6F7FB',
     white: '#FFFFFF',
     slate900: '#0F172A',
@@ -17,7 +20,8 @@ export const lightPalette = {
     red: '#DC2626',
   };
   
-  export const darkPalette = {
+  /** Тёмная тема */
+  export const darkPalette: Palette = {
     page: '#1a1a1a',
     white: '#2a2a2a',
     slate900: '#f0f0f0',

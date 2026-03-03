@@ -1,9 +1,11 @@
-export function getTodayString() {
+/** Возвращает сегодняшнюю дату в формате YYYY-MM-DD */
+export function getTodayString(): string {
   const d = new Date();
   return d.toISOString().slice(0, 10);
 }
 
-export function isYesterday(date: string) {
+/** Проверяет, что переданная дата (YYYY-MM-DD) — вчера */
+export function isYesterday(date: string): boolean {
   const d = new Date(date);
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);

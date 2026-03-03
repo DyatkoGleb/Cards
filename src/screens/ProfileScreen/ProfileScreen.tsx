@@ -5,24 +5,23 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
-  Modal,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
-import { exportBackup, importBackup } from '../../utils/backup';
 import { styles } from './ProfileScreen.styles';
 import { InputWithSuggestions } from '../../components/InputWithSuggestions';
+import { IconArrowRight, IconClose, IconCheck, IconTrash } from '../../components/Icons';
+import { ModalWithKeyboard } from '../../components/ModalWithKeyboard';
 import { useSuggestions } from '../../hooks/useSuggestions';
-import { Stats, WordPair } from '../../types/word';
+import { modalStyles } from '../../theme/modal.styles';
+import type { Stats, WordPair } from '../../types/word';
+import type { Palette } from '../../types/palette';
 
-type Props = {
+type ProfileScreenProps = {
   words: WordPair[];
   stats: Stats;
   deleteWord: (id: string) => Promise<void>;
   editWord: (id: string, word: string, translation: string) => Promise<void>;
-  palette: any;
-  replaceAll: (nextWords: WordPair[], nextStats: Stats) => Promise<void>;
+  palette: Palette;
 };
 
 export function ProfileScreen({
@@ -30,9 +29,8 @@ export function ProfileScreen({
   stats,
   deleteWord,
   editWord,
-  replaceAll,
   palette,
-}: Props) {
+}: ProfileScreenProps) {
   const [search, setSearch] = useState('');
   const [editing, setEditing] = useState<WordPair | null>(null);
   const [word, setWord] = useState('');
@@ -95,18 +93,26 @@ export function ProfileScreen({
   const handleDelete = () => {
     if (!editing) return;
 
+    const idToDelete = editing.id;
+    const wordLabel = editing.word;
+
     Alert.alert(
       'Delete pair',
-      `Delete "${editing.word}"?`,
+      `Delete "${wordLabel}"?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
-            await deleteWord(editing.id);
             setModalVisible(false);
             setEditing(null);
+            setError('');
+            try {
+              await deleteWord(idToDelete);
+            } catch {
+              setError('Не удалось удалить');
+            }
           },
         },
       ]
@@ -116,85 +122,18 @@ export function ProfileScreen({
   const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
   const weekWords = words.filter(w => w.createdAt >= weekAgo).length;
 
-  const handleExport = async () => {
-    await exportBackup({
-      words,
-      stats,
-    });
-  };
-  
-  const handleImport = async () => {
-    const data = await importBackup();
-    if (!data) return;
-  
-    Alert.alert(
-      'Импорт данных',
-      'Текущие данные будут перезаписаны. Продолжить?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Импортировать',
-          style: 'destructive',
-          onPress: async () => {
-            await replaceAll(data.words, data.stats);
-          },
-        },
-      ]
-    );
-  };
-
   return (
     <ScrollView
       style={[styles.content, { backgroundColor: palette.page }]}
       contentContainerStyle={styles.contentInner}
       keyboardShouldPersistTaps="handled"
     >
-      {/* HEADER */}
       <View style={styles.headerRow}>
         <Text style={[styles.h1, { color: palette.slate900 }]}>
           Profile
         </Text>
-
-        <View style={[styles.toggle, { backgroundColor: palette.border }]}>
-          <TouchableOpacity
-            style={[
-              styles.toggleLight,
-              { backgroundColor: palette.white },
-            ]}
-            onPress={handleExport}
-          >
-            <Text
-              style={{
-                color: palette.slate500,
-                fontSize: 10,
-                fontWeight: '600',
-              }}
-            >
-              Export
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.toggleDark,
-              { backgroundColor: palette.white },
-            ]}
-            onPress={handleImport}
-          >
-            <Text
-              style={{
-                color: palette.slate500,
-                fontSize: 10,
-                fontWeight: '600',
-              }}
-            >
-              Import
-            </Text>
-          </TouchableOpacity>
-        </View>
       </View>
 
-      {/* PROFILE CARD */}
       <View
         style={[
           styles.profileCard,
@@ -215,7 +154,6 @@ export function ProfileScreen({
         </Text>
       </View>
 
-      {/* STATS */}
       <View style={styles.statsRow}>
         <View style={[styles.stat, { backgroundColor: palette.blueSoft }]}>
           <Text style={[styles.statText, { color: palette.blueDeep }]}>
@@ -237,7 +175,6 @@ export function ProfileScreen({
         </View>
       </View>
 
-      {/* WORD LIST */}
       <View
         style={[
           styles.section,
@@ -275,92 +212,81 @@ export function ProfileScreen({
             ]}
             onPress={() => openEdit(item)}
           >
-            <Text style={[styles.rowText, { color: palette.slate700 }]}>
-              {item.word} → {item.translation} → {item.score}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <Text style={[styles.rowText, { color: palette.slate700 }]}>{item.word}</Text>
+              <IconArrowRight size={14} color={palette.slate500} />
+              <Text style={[styles.rowText, { color: palette.slate700 }]}>{item.translation}</Text>
+              <IconArrowRight size={14} color={palette.slate500} />
+              <Text style={[styles.rowText, { color: palette.slate700 }]}>{item.score}</Text>
+            </View>
           </TouchableOpacity>
         ))}
       </View>
 
-      {/* MODAL */}
-      <Modal visible={modalVisible} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 0}
-            style={{ width: '100%', alignItems: 'center' }}
+      <ModalWithKeyboard
+        visible={modalVisible}
+        palette={palette}
+        keyboardVerticalOffset={40}
+      >
+        <Text style={[modalStyles.title, { color: palette.slate900 }]}>
+          Edit pair
+        </Text>
+        <InputWithSuggestions
+          value={word}
+          onChangeText={setWord}
+          placeholder="Английское слово"
+          suggestions={wordSuggestions}
+          onSelect={setWord}
+          palette={palette}
+          error={error}
+        />
+        <InputWithSuggestions
+          value={translation}
+          onChangeText={setTranslation}
+          placeholder="Русский перевод"
+          suggestions={translationSuggestions}
+          onSelect={setTranslation}
+          palette={palette}
+        />
+        <View style={modalStyles.buttonsGroup}>
+          <TouchableOpacity
+            style={[
+              modalStyles.iconButton,
+              {
+                backgroundColor: palette.white,
+                borderColor: palette.borderStrong,
+              },
+            ]}
+            onPress={handleDelete}
           >
-            <View
-              style={[
-                styles.modalContent,
-                { backgroundColor: palette.white },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.modalTitle,
-                  { color: palette.slate900 },
-                ]}
-              >
-                Edit pair
-              </Text>
-
-              <InputWithSuggestions
-                value={word}
-                onChangeText={setWord}
-                placeholder="Английское слово"
-                suggestions={wordSuggestions}
-                onSelect={setWord}
-                palette={palette}
-                error={error}
-              />
-
-              <InputWithSuggestions
-                value={translation}
-                onChangeText={setTranslation}
-                placeholder="Русский перевод"
-                suggestions={translationSuggestions}
-                onSelect={setTranslation}
-                palette={palette}
-              />
-
-              <View style={styles.modalButtonsRow}>
-                <View style={styles.modalButtonsGroup}>
-                  <TouchableOpacity
-                    style={[
-                      styles.modalButton,
-                      { backgroundColor: palette.slate400 },
-                    ]}
-                    onPress={() => setModalVisible(false)}
-                  >
-                    <Text style={styles.buttonText}>Отмена</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[
-                      styles.modalButton,
-                      { backgroundColor: palette.blue },
-                    ]}
-                    onPress={handleSave}
-                  >
-                    <Text style={styles.buttonText}>Сохранить</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <TouchableOpacity
-                  style={[
-                    styles.modalButton,
-                    { backgroundColor: palette.red },
-                  ]}
-                  onPress={handleDelete}
-                >
-                  <Text style={styles.buttonText}>Удалить</Text>
-                </TouchableOpacity>
-              </View>
-              </View>
-          </KeyboardAvoidingView>
+            <IconTrash size={28} color={palette.slate700} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              modalStyles.iconButton,
+              {
+                backgroundColor: palette.white,
+                borderColor: palette.borderStrong,
+              },
+            ]}
+            onPress={() => setModalVisible(false)}
+          >
+            <IconClose size={28} color={palette.slate700} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              modalStyles.iconButton,
+              {
+                backgroundColor: palette.white,
+                borderColor: palette.borderStrong,
+              },
+            ]}
+            onPress={handleSave}
+          >
+            <IconCheck size={28} color={palette.slate700} />
+          </TouchableOpacity>
         </View>
-      </Modal>
+      </ModalWithKeyboard>
     </ScrollView>
   );
 }

@@ -13,7 +13,6 @@ export default function App() {
     deleteWord,
     editWord,
     updateStreak,
-    replaceAll,
   } = useWordStorage();
 
   const [isDark, setIsDark] = useState(true);
@@ -41,7 +40,6 @@ export default function App() {
           deleteWord={deleteWord}
           editWord={editWord}
           updateStreak={updateStreak}
-          replaceAll={replaceAll}
           palette={palette}
           isDark={isDark}
           toggleTheme={toggleTheme}

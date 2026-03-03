@@ -1,56 +1,30 @@
 import { StyleSheet } from 'react-native';
+import {
+  PAGE_PADDING_HORIZONTAL,
+  PAGE_PADDING_BOTTOM,
+  HEADER_CONTENT_GAP,
+} from '../../theme/layout';
 
 export const styles = StyleSheet.create({
-  content: { flex: 1 },
-  contentInner: { paddingHorizontal: 16, paddingBottom: 24, gap: 14 },
+  content: { 
+    flex: 1,
+    paddingTop: 2,
+  },
+  contentInner: {
+    paddingHorizontal: PAGE_PADDING_HORIZONTAL,
+    paddingBottom: PAGE_PADDING_BOTTOM,
+    gap: HEADER_CONTENT_GAP,
+  },
 
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-
-  headerActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
   
-  headerButton: {
-    paddingHorizontal: 12,
-    height: 32,
-    borderRadius: 10,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  toggle: {
-    width: 120,
-    height: 36,
-    borderRadius: 18,
-    padding: 4,
-    flexDirection: 'row',
-    gap: 4,
-  },
-
-  toggleLight: {
-    flex: 1,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  toggleDark: {
-    flex: 1,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
   h1: { fontSize: 28, fontWeight: '700' },
 
   profileCard: {
-    borderWidth: 1,
     borderRadius: 20,
     padding: 14,
     gap: 8,
@@ -84,7 +58,6 @@ export const styles = StyleSheet.create({
   },
 
   section: {
-    borderWidth: 1,
     borderRadius: 16,
     padding: 14,
     gap: 8,
@@ -93,10 +66,10 @@ export const styles = StyleSheet.create({
   sectionTitle: { fontSize: 16, fontWeight: '700' },
 
   searchInput: {
-    height: 40,
-    borderRadius: 10,
+    height: 44,
+    borderRadius: 22,
     borderWidth: 1,
-    paddingHorizontal: 12,
+    paddingHorizontal: 18,
     marginBottom: 8,
   },
 
@@ -110,44 +83,4 @@ export const styles = StyleSheet.create({
   },
 
   rowText: { fontSize: 13, fontWeight: '500' },
-
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  modalContent: {
-    borderRadius: 20,
-    padding: 30,
-    width: '80%',
-    gap: 15,
-  },
-
-  modalTitle: { fontSize: 22, fontWeight: '700', textAlign: 'center' },
-
-  modalButtonsRow: {
-    gap: 10,
-    marginTop: 10,
-  },
-
-  modalButtonsGroup: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-
-  modalButton: {
-    flex: 1,
-    minHeight: 48,
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
 });

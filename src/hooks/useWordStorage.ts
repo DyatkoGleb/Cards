@@ -84,14 +84,14 @@ export function useWordStorage() {
     id: string,
     word: string,
     translation: string,
-    score: number
+    score?: number
   ) => {
     const updated = words.map(w =>
       w.id === id
-        ? { ...w, word, translation, score }
+        ? { ...w, word, translation, score: score ?? w.score }
         : w
     );
-  
+
     await persistWords(updated);
   };
 
@@ -118,23 +118,6 @@ export function useWordStorage() {
     await AsyncStorage.setItem(STATS_KEY, JSON.stringify(nextStats));
   };
 
-  const replaceAll = async (
-    nextWords: WordPair[],
-    nextStats: Stats
-  ) => {
-    setWords(nextWords);
-    setStats(nextStats);
-  
-    await AsyncStorage.setItem(
-      WORDS_KEY,
-      JSON.stringify(nextWords)
-    );
-    await AsyncStorage.setItem(
-      STATS_KEY,
-      JSON.stringify(nextStats)
-    );
-  };
-
   return {
     words,
     stats,
@@ -143,6 +126,5 @@ export function useWordStorage() {
     deleteWord,
     editWord,
     updateStreak,
-    replaceAll,
   };
 }

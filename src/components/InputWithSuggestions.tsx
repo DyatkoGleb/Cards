@@ -10,13 +10,15 @@ import {
   KeyboardTypeOptions,
 } from 'react-native';
 
+import type { Palette } from '../types/palette';
+
 type Props = {
   value: string;
   onChangeText: (text: string) => void;
   placeholder?: string;
   suggestions: string[];
   onSelect: (text: string) => void;
-  palette: any;
+  palette: Palette;
   error?: string;
   keyboardType?: KeyboardTypeOptions;
   autofocus?: boolean;
@@ -34,7 +36,7 @@ export const InputWithSuggestions = ({
   autofocus = false
 }: Props) => {
   const [isFocused, setIsFocused] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [_, setKeyboardHeight] = useState(0);
   const containerRef = useRef<View>(null);
 
   useEffect(() => {
@@ -52,7 +54,7 @@ export const InputWithSuggestions = ({
   }, []);
 
   return (
-    <View ref={containerRef} style={{ position: 'relative', marginBottom: 20 }}>
+    <View ref={containerRef} style={{ position: 'relative', marginBottom: 10 }}>
       <TextInput
         value={value}
         onChangeText={onChangeText}
@@ -112,9 +114,9 @@ export const InputWithSuggestions = ({
 const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    borderRadius: 36,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
     fontSize: 16,
   },
   errorText: {
@@ -123,20 +125,20 @@ const styles = StyleSheet.create({
   },
   suggestionsContainer: {
     position: 'absolute',
-    top: 52,
+    top: 56,
     left: 0,
     right: 0,
     borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: 20,
     zIndex: 1000,
     shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
-    elevation: 6, // Android shadow
+    elevation: 6,
   },
   suggestionItem: {
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
   },
 });

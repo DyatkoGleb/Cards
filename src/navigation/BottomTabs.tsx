@@ -1,24 +1,12 @@
 import React, { useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { View } from 'react-native';
 import { ProfileScreen } from '../screens/ProfileScreen/ProfileScreen';
 import { CardsScreen } from '../screens/CardsScreen/CardsScreen';
-import { Stats, WordPair } from '../types/word';
 import { AddWordButton } from '../components/AddWordButton';
-import { View } from 'react-native';
 import { AddWordModal } from '../components/AddWordModal/AddWordModal';
-
-type Props = {
-  words: any[];
-  stats: any;
-  palette: any;
-  isDark: boolean;
-  toggleTheme: () => void;
-  addWord: (word: string, translation: string) => Promise<any>;
-  deleteWord: (id: string) => Promise<void>;
-  editWord: (id: string, word: string, translation: string) => Promise<void>;
-  updateStreak: () => Promise<any>;
-  replaceAll: (nextWords: WordPair[], nextStats: Stats) => Promise<void>;
-};
+import { IconCards, IconProfile } from '../components/Icons';
+import type { AppNavigatorProps } from '../types/app';
 
 const Tab = createBottomTabNavigator();
 
@@ -32,8 +20,7 @@ export function BottomTabs({
   deleteWord,
   editWord,
   updateStreak,
-  replaceAll,
-}: Props) {
+}: AppNavigatorProps) {
   const [addModalVisible, setAddModalVisible] = useState(false);
   
   return (
@@ -45,10 +32,11 @@ export function BottomTabs({
             height: 74,
             paddingBottom: 20,
             paddingTop: 6,
+            paddingHorizontal: 30,
             borderTopWidth: 0,
             backgroundColor: palette.white,
           },
-          tabBarActiveTintColor: palette.blue,
+          tabBarActiveTintColor: palette.slate900,
           tabBarInactiveTintColor: palette.slate400,
           tabBarLabelStyle: {
             fontSize: 14,
@@ -56,7 +44,15 @@ export function BottomTabs({
           },
         }}
       >
-        <Tab.Screen name="Cards" options={{ title: 'Cards' }}>
+        <Tab.Screen
+          name="Cards"
+          options={{
+            title: 'Cards',
+            tabBarIcon: ({ color, size }) => (
+              <IconCards size={size} color={color} />
+            ),
+          }}
+        >
           {() => (
             <CardsScreen
               words={words}
@@ -73,9 +69,6 @@ export function BottomTabs({
           name="Add"
           component={View}
           options={{
-            tabBarItemStyle: {
-              width: 0, 
-            },
             tabBarButton: () => (
               <View
                 style={{
@@ -84,20 +77,27 @@ export function BottomTabs({
                   transform: [{ translateX: '-50%' }],
                 }}
               >
-                <AddWordButton onPress={() => setAddModalVisible(true)} />
+                <AddWordButton onPress={() => setAddModalVisible(true)} palette={palette} />
               </View>
             ),
           }}
         />
 
-        <Tab.Screen name="Profile" options={{ title: 'Profile' }}>
+        <Tab.Screen
+          name="Profile"
+          options={{
+            title: 'Profile',
+            tabBarIcon: ({ color, size }) => (
+              <IconProfile size={size} color={color} />
+            ),
+          }}
+        >
           {() => (
             <ProfileScreen
               words={words}
               stats={stats}
               deleteWord={deleteWord}
               editWord={editWord}
-              replaceAll={replaceAll}
               palette={palette}
             />
           )}

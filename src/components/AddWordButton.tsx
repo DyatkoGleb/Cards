@@ -1,27 +1,28 @@
-import { Text, TouchableOpacity } from "react-native";
+import { TouchableOpacity } from 'react-native';
+import { IconPlus } from './Icons';
+import { iconButtonStyles } from '../theme/iconButton.styles';
+import type { Palette } from '../types/palette';
 
-export const AddWordButton = ({ onPress }: { onPress: () => void }) => {
+type Props = {
+  onPress: () => void;
+  palette: Palette;
+};
+
+export const AddWordButton = ({ onPress, palette }: Props) => {
   return (
     <TouchableOpacity
       onPress={onPress}
-      activeOpacity={0.85}
-      style={{
-        width: 64,
-        height: 64,
-        borderRadius: 32,
-        backgroundColor: '#2a2a2a',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: -20,
-        shadowColor: '#000',
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 6,
-      }}
+      activeOpacity={0.8}
+      style={[
+        iconButtonStyles.iconButton,
+        {
+          backgroundColor: palette.white,
+          marginTop: -20,
+          elevation: 4,
+        },
+      ]}
     >
-      <Text style={{ color: '#fff', fontSize: 32, lineHeight: 36 }}>
-        +
-      </Text>
+      <IconPlus size={28} color={palette.slate700} />
     </TouchableOpacity>
   );
-}
+};
