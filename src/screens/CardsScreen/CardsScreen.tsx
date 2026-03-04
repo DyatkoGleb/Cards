@@ -24,6 +24,7 @@ import {
 import { FakeGradient } from '../../components/FakeGradient';
 import { ThemeToggle } from '../../components/ThemeToggle';
 import { ModalWithKeyboard } from '../../components/ModalWithKeyboard';
+import { SentenceCheckModal } from '../../components/SentenceCheckModal/SentenceCheckModal';
 import { useSuggestions } from '../../hooks/useSuggestions';
 import { useThemePersistence, persistTheme } from '../../hooks/useThemePersistence';
 import { pickWeightedIndex } from '../../utils/weightedRandom';
@@ -88,6 +89,7 @@ export function CardsScreen({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showTranslation, setShowTranslation] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [sentenceCheckVisible, setSentenceCheckVisible] = useState(false);
   const [editWordValue, setEditWordValue] = useState('');
   const [editTranslationValue, setEditTranslationValue] = useState('');
   const [editWordError, setEditWordError] = useState('');
@@ -114,9 +116,13 @@ export function CardsScreen({
     pickRandomCard();
   }, [words]);
 
-  const pickRandomCard = () => {
+  const pickRandomCard = (excludeCurrentIndex?: number) => {
     if (!words.length) return;
-    const index = pickWeightedIndex(words);
+    const exclude =
+      words.length > 2 && excludeCurrentIndex !== undefined
+        ? excludeCurrentIndex
+        : undefined;
+    const index = pickWeightedIndex(words, exclude);
     setCurrentIndex(index);
     setShowTranslation(Math.random() < 0.5);
   };
@@ -143,7 +149,7 @@ export function CardsScreen({
       currentPair.translation,
       nextScore
     );
-    pickRandomCard();
+    pickRandomCard(safeIndex);
   };
 
   const openEditModal = () => {
@@ -172,7 +178,7 @@ export function CardsScreen({
     setEditWordError('');
     await editWord(currentPair.id, word, translation, currentPair.score ?? 0);
     closeEditModal();
-    pickRandomCard();
+    pickRandomCard(safeIndex);
   };
 
   const panResponder = useMemo(
@@ -360,6 +366,7 @@ export function CardsScreen({
                     zIndex: 10,
                   },
                 ]}
+                onPress={() => setSentenceCheckVisible(true)}
               >
                 <IconChat size={CARD_ICON_SIZE} color={palette.slate700} />
               </TouchableOpacity>
@@ -436,6 +443,13 @@ export function CardsScreen({
               </TouchableOpacity>
             </View>
           </ModalWithKeyboard>
+
+          <SentenceCheckModal
+            visible={sentenceCheckVisible}
+            onClose={() => setSentenceCheckVisible(false)}
+            word={currentPair.word}
+            palette={palette}
+          />
         </>
       )}
     </View>
