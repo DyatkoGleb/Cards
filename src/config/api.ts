@@ -1,3 +1,10 @@
-import { GEMINI_API_KEY as ENV_KEY } from '@env';
+/** Ключ Gemini, введённый в профиле (AsyncStorage) */
+let userGeminiKey = '';
 
-export const GEMINI_API_KEY = typeof ENV_KEY === 'string' ? ENV_KEY : '';
+export function getGeminiApiKey(): string {
+  return (userGeminiKey ?? '').trim();
+}
+
+export function setGeminiKey(key: string): void {
+  userGeminiKey = key ?? '';
+}

@@ -6,9 +6,8 @@ import {
 } from '../../theme/layout';
 
 export const styles = StyleSheet.create({
-  content: { 
+  content: {
     flex: 1,
-    paddingTop: 2,
   },
   contentInner: {
     paddingHorizontal: PAGE_PADDING_HORIZONTAL,
@@ -21,7 +20,27 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  
+
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+
+  headerPillButton: {
+    height: 36,
+    minWidth: 72,
+    paddingHorizontal: 14,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  headerPillButtonText: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+
   h1: { fontSize: 28, fontWeight: '700' },
 
   profileCard: {
@@ -71,6 +90,13 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: 18,
     marginBottom: 8,
+  },
+
+  geminiKeyInput: {
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    paddingHorizontal: 18,
   },
 
   row: {

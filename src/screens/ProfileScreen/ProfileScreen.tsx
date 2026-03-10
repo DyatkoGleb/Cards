@@ -12,6 +12,7 @@ import { InputWithSuggestions } from '../../components/InputWithSuggestions';
 import { IconArrowRight, IconClose, IconCheck, IconTrash } from '../../components/Icons';
 import { ModalWithKeyboard } from '../../components/ModalWithKeyboard';
 import { useSuggestions } from '../../hooks/useSuggestions';
+import { useGeminiKey } from '../../hooks/useGeminiKey';
 import { modalStyles } from '../../theme/modal.styles';
 import type { Stats, WordPair } from '../../types/word';
 import type { Palette } from '../../types/palette';
@@ -37,6 +38,10 @@ export function ProfileScreen({
   const [translation, setTranslation] = useState('');
   const [error, setError] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
+  const [geminiModalVisible, setGeminiModalVisible] = useState(false);
+  const [geminiKeyInput, setGeminiKeyInput] = useState('');
+
+  const [savedGeminiKey, , saveGeminiKey] = useGeminiKey();
 
   const filteredWords = useMemo(() => {
     if (!search.trim()) return words;
@@ -64,6 +69,16 @@ export function ProfileScreen({
     setTranslation(item.translation);
     setError('');
     setModalVisible(true);
+  };
+
+  const openGeminiModal = () => {
+    setGeminiKeyInput(savedGeminiKey);
+    setGeminiModalVisible(true);
+  };
+
+  const handleSaveGeminiKey = async () => {
+    await saveGeminiKey(geminiKeyInput);
+    setGeminiModalVisible(false);
   };
 
   const handleSave = async () => {
@@ -132,6 +147,24 @@ export function ProfileScreen({
         <Text style={[styles.h1, { color: palette.slate900 }]}>
           Profile
         </Text>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={[
+              styles.headerPillButton,
+              { backgroundColor: palette.border },
+            ]}
+            onPress={openGeminiModal}
+          >
+            <Text
+              style={[
+                styles.headerPillButtonText,
+                { color: palette.slate700 },
+              ]}
+            >
+              Gemini
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View
@@ -282,6 +315,57 @@ export function ProfileScreen({
               },
             ]}
             onPress={handleSave}
+          >
+            <IconCheck size={28} color={palette.slate700} />
+          </TouchableOpacity>
+        </View>
+      </ModalWithKeyboard>
+
+      <ModalWithKeyboard
+        visible={geminiModalVisible}
+        palette={palette}
+        keyboardVerticalOffset={40}
+      >
+        <Text style={[modalStyles.title, { color: palette.slate900 }]}>
+          Gemini API Key
+        </Text>
+        <TextInput
+          value={geminiKeyInput}
+          onChangeText={setGeminiKeyInput}
+          placeholder="Введите API-ключ"
+          placeholderTextColor={palette.slate400}
+          secureTextEntry
+          style={[
+            styles.geminiKeyInput,
+            {
+              borderColor: palette.borderStrong,
+              color: palette.slate900,
+              backgroundColor: palette.white,
+            },
+          ]}
+        />
+        <View style={modalStyles.buttonsGroup}>
+          <TouchableOpacity
+            style={[
+              modalStyles.iconButton,
+              {
+                backgroundColor: palette.white,
+                borderColor: palette.borderStrong,
+              },
+            ]}
+            onPress={() => setGeminiModalVisible(false)}
+          >
+            <IconClose size={28} color={palette.slate700} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              modalStyles.iconButton,
+              {
+                backgroundColor: palette.white,
+                borderColor: palette.borderStrong,
+              },
+            ]}
+            onPress={handleSaveGeminiKey}
           >
             <IconCheck size={28} color={palette.slate700} />
           </TouchableOpacity>

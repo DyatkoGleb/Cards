@@ -1,9 +1,9 @@
 /**
- * Проверка предложения: при наличии GEMINI_API_KEY — через Gemini,
+ * Проверка предложения: при наличии ключа Gemini (из профиля) — через Gemini,
  * иначе через LanguageTool.
  */
 
-import { GEMINI_API_KEY } from '../config/api';
+import { getGeminiApiKey } from '../config/api';
 
 const LT_URL = 'https://api.languagetool.org/v2/check';
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
@@ -28,7 +28,7 @@ export async function checkSentence(
     return { error: 'Enter the sentence' };
   }
 
-  if (GEMINI_API_KEY.trim()) {
+  if (getGeminiApiKey()) {
     const geminiResult = await checkWithGemini(word, text);
     if ('error' in geminiResult && (geminiResult.error.includes('quota') || geminiResult.error.includes('billing') || geminiResult.error.includes('exceeded'))) {
       return checkWithLanguageTool(text);
@@ -46,7 +46,7 @@ Reply with exactly one line:
 - Otherwise write only the corrected English sentence, nothing else. No explanations.`;
 
   try {
-    const res = await fetch(`${GEMINI_URL}?key=${encodeURIComponent(GEMINI_API_KEY)}`, {
+    const res = await fetch(`${GEMINI_URL}?key=${encodeURIComponent(getGeminiApiKey())}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -75,6 +75,12 @@ Reply with exactly one line:
       return { ok: true };
     }
     if (raw.length > 0) {
+      const suggestionTrimmed = raw.trim();
+      const textTrimmed = text.trim();
+      // Игнорировать исправление «только добавить точку в конец»
+      if (suggestionTrimmed === textTrimmed + '.') {
+        return { ok: true };
+      }
       return { ok: false, suggestion: raw };
     }
     return { error: 'Пустой ответ' };

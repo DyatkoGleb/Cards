@@ -6,7 +6,6 @@ import {
   Animated,
   PanResponder,
   Pressable,
-  Modal,
   Platform,
 } from 'react-native';
 
@@ -34,10 +33,10 @@ import { styles } from './CardsScreen.styles';
 
 const CARD_ICON_SIZE = 32;
 const PRESS_ALPHA = 0.28;
-const COLOR_KNOW = `rgba(16,185,129,${PRESS_ALPHA})`;
-const COLOR_DONT_KNOW = `rgba(239,68,68,${PRESS_ALPHA})`;
-const SHADOW_KNOW = 'rgb(16,185,129)';
-const SHADOW_DONT_KNOW = 'rgb(239,68,68)';
+const COLOR_KNOW = `rgba(50,255,149,${PRESS_ALPHA})`;
+const COLOR_DONT_KNOW = `rgba(255,40,40,${PRESS_ALPHA})`;
+const SHADOW_KNOW = 'rgb(50,255,149)';
+const SHADOW_DONT_KNOW = 'rgb(255,40,40)';
 const PRESSED_SHADOW = {
   shadowOpacity: 0.55,
   shadowRadius: 10,
@@ -245,7 +244,7 @@ export function CardsScreen({
                 },
               ]}
             >
-              <FakeGradient color="rgba(16,185,129,ALPHA)" />
+              <FakeGradient color="rgba(50,255,149,ALPHA)" />
             </Animated.View>
 
             <Animated.View
@@ -261,7 +260,7 @@ export function CardsScreen({
                 },
               ]}
             >
-              <FakeGradient color="rgba(239,68,68,ALPHA)" />
+              <FakeGradient color="rgba(255,40,40,ALPHA)" />
             </Animated.View>
 
             <Pressable
