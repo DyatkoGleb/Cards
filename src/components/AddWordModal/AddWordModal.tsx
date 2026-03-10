@@ -115,7 +115,7 @@ export function AddWordModal({
               borderColor: palette.borderStrong,
             },
           ]}
-          onPress={onClose}
+          onPress={closeModal}
         >
           <IconClose size={MODAL_ICON_SIZE} color={palette.slate700} />
         </TouchableOpacity>

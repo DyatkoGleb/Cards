@@ -249,8 +249,6 @@ export function ProfileScreen({
               <Text style={[styles.rowText, { color: palette.slate700 }]}>{item.word}</Text>
               <IconArrowRight size={14} color={palette.slate500} />
               <Text style={[styles.rowText, { color: palette.slate700 }]}>{item.translation}</Text>
-              <IconArrowRight size={14} color={palette.slate500} />
-              <Text style={[styles.rowText, { color: palette.slate700 }]}>{item.score}</Text>
             </View>
           </TouchableOpacity>
         ))}

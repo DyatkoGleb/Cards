@@ -47,6 +47,9 @@ export const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 14,
     gap: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
   },
 
   avatar: {
@@ -80,6 +83,9 @@ export const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 14,
     gap: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
   },
 
   sectionTitle: { fontSize: 16, fontWeight: '700' },
