@@ -87,7 +87,10 @@ export function SentenceCheckModal({
       palette={palette}
       keyboardVerticalOffset={64}
     >
-      <Text style={[modalStyles.title, { color: palette.slate900 }]}>
+      <Text
+        style={[modalStyles.title, { color: palette.slate900 }]}
+        numberOfLines={3}
+      >
         A sentence with the word "{word}"
       </Text>
 
@@ -122,14 +125,14 @@ export function SentenceCheckModal({
 
       {result !== null && (
         <View style={styles.resultWrap}>
-          {'ok' in result && result.ok && (
+          {result.status === 'ok' && (
             <Text style={[styles.resultOk, { color: palette.greenDeep }]}>
               OK
             </Text>
           )}
-          {'ok' in result && result.ok === false && 'suggestion' in result && (
+          {result.status === 'corrected' && (
             <Text style={[styles.resultSuggestion, { color: palette.slate900 }]}>
-              {getSuggestionSegments(lastCheckedSentence, result.suggestion).map(
+              {getSuggestionSegments(lastCheckedSentence, result.message).map(
                 (seg, i) =>
                   seg.bold ? (
                     <Text key={i} style={styles.resultSuggestionBold}>
@@ -141,9 +144,9 @@ export function SentenceCheckModal({
               )}
             </Text>
           )}
-          {'error' in result && (
+          {result.status === 'error' && (
             <Text style={[styles.resultError, { color: palette.red }]}>
-              {result.error}
+              {result.message}
             </Text>
           )}
         </View>
@@ -153,10 +156,7 @@ export function SentenceCheckModal({
         <TouchableOpacity
           style={[
             modalStyles.iconButton,
-            {
-              backgroundColor: palette.white,
-              borderColor: palette.borderStrong,
-            },
+            { backgroundColor: palette.white },
           ]}
           onPress={handleClose}
         >
@@ -165,10 +165,7 @@ export function SentenceCheckModal({
         <TouchableOpacity
           style={[
             modalStyles.iconButton,
-            {
-              backgroundColor: palette.white,
-              borderColor: palette.borderStrong,
-            },
+            { backgroundColor: palette.white },
           ]}
           onPress={handleCheck}
           disabled={!canSubmit}
@@ -186,6 +183,8 @@ export function SentenceCheckModal({
 
 const styles = StyleSheet.create({
   textarea: {
+    alignSelf: 'stretch',
+    width: '100%',
     borderWidth: 1,
     borderRadius: 20,
     paddingHorizontal: 18,
@@ -194,6 +193,7 @@ const styles = StyleSheet.create({
     minHeight: MIN_TEXTAREA_HEIGHT,
   },
   resultWrap: {
+    alignSelf: 'stretch',
     minHeight: 24,
     paddingVertical: 4,
   },

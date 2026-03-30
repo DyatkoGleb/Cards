@@ -11,11 +11,16 @@ import { lightPalette, darkPalette } from './src/theme/palette';
 export default function App() {
   const {
     words,
+    folders,
+    selectedSet,
     stats,
     addWord,
     deleteWord,
     editWord,
+    addFolder,
+    setSelectedSet,
     updateStreak,
+    retryTranscription,
   } = useWordStorage();
 
   const [isDark, setIsDark] = useState(true);
@@ -48,7 +53,12 @@ export default function App() {
           addWord={addWord}
           deleteWord={deleteWord}
           editWord={editWord}
+          addFolder={addFolder}
+          folders={folders}
+          selectedSet={selectedSet}
+          setSelectedSet={setSelectedSet}
           updateStreak={updateStreak}
+          retryTranscription={retryTranscription}
           palette={palette}
           isDark={isDark}
           toggleTheme={toggleTheme}

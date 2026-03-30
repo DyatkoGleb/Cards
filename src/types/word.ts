@@ -12,6 +12,27 @@ export type WordPair = {
   createdAt: number;
   /** Оценка знания 0..100 */
   score: number;
+  /** Признак включения в общий набор */
+  showInGeneralSet?: boolean;
+  /** Связанные папки */
+  folderIds?: string[];
+  /** Фоновой статус получения транскрипции */
+  transcriptionStatus?: 'idle' | 'pending' | 'ready' | 'failed';
+  /** Транскрипция слова (IPA) */
+  transcription?: string;
+};
+
+export type Folder = {
+  id: string;
+  name: string;
+  createdAt: number;
+};
+
+export type TrainingMode = 'general' | 'folder';
+
+export type TrainingSetSelection = {
+  mode: TrainingMode;
+  folderId: string | null;
 };
 
 /**

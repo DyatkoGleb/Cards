@@ -9,9 +9,9 @@ const LT_URL = 'https://api.languagetool.org/v2/check';
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
 
 export type CheckResult =
-  | { ok: true }
-  | { ok: false; suggestion: string }
-  | { error: string };
+  | { status: 'ok'; message: 'ok' }
+  | { status: 'corrected'; message: string }
+  | { status: 'error'; message: string };
 
 type LTMatch = {
   offset: number;
@@ -25,13 +25,17 @@ export async function checkSentence(
 ): Promise<CheckResult> {
   const text = sentence.trim();
   if (!text) {
-    return { error: 'Enter the sentence' };
+    return { status: 'error', message: 'Enter the sentence' };
   }
 
   if (getGeminiApiKey()) {
     const geminiResult = await checkWithGemini(word, text);
-    if ('error' in geminiResult && (geminiResult.error.includes('quota') || geminiResult.error.includes('billing') || geminiResult.error.includes('exceeded'))) {
-      return checkWithLanguageTool(text);
+    if (
+      geminiResult.status === 'error' &&
+      !geminiResult.message.includes('Неверный или неактивный API ключ Gemini')
+    ) {
+      const fallback = await checkWithLanguageTool(text);
+      return fallback;
     }
     return geminiResult;
   }
@@ -61,9 +65,9 @@ Reply with exactly one line:
     if (!res.ok) {
       const err = await res.text();
       if (res.status === 403 || res.status === 400) {
-        return { error: 'Неверный или неактивный API ключ Gemini' };
+        return { status: 'error', message: 'Неверный или неактивный API ключ Gemini' };
       }
-      return { error: err || `Ошибка ${res.status}` };
+      return { status: 'error', message: err || `Ошибка ${res.status}` };
     }
 
     const data = (await res.json()) as {
@@ -72,21 +76,24 @@ Reply with exactly one line:
     const raw = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim().replace(/^["']|["']$/g, '') ?? '';
 
     if (/^\s*OK\s*$/i.test(raw)) {
-      return { ok: true };
+      return { status: 'ok', message: 'ok' };
     }
     if (raw.length > 0) {
       const suggestionTrimmed = raw.trim();
       const textTrimmed = text.trim();
       // Игнорировать исправление «только добавить точку в конец»
       if (suggestionTrimmed === textTrimmed + '.') {
-        return { ok: true };
+        return { status: 'ok', message: 'ok' };
       }
-      return { ok: false, suggestion: raw };
+      return { status: 'corrected', message: raw };
     }
-    return { error: 'Пустой ответ' };
+    return { status: 'error', message: 'Пустой ответ' };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    return { error: msg.includes('Network') || msg.includes('fetch') ? 'Нет сети' : msg };
+    return {
+      status: 'error',
+      message: msg.includes('Network') || msg.includes('fetch') ? 'Нет сети' : msg,
+    };
   }
 }
 
@@ -102,21 +109,30 @@ async function checkWithLanguageTool(text: string): Promise<CheckResult> {
     });
 
     if (!res.ok) {
-      return { error: res.status === 429 ? 'Слишком много запросов, подождите минуту' : `Ошибка ${res.status}` };
+      return {
+        status: 'error',
+        message:
+          res.status === 429
+            ? 'Слишком много запросов, подождите минуту'
+            : `Ошибка ${res.status}`,
+      };
     }
 
     const data = (await res.json()) as { matches?: LTMatch[] };
     const matches = data.matches ?? [];
 
     if (matches.length === 0) {
-      return { ok: true };
+      return { status: 'ok', message: 'ok' };
     }
 
     const suggestion = buildCorrectedText(text, matches);
-    return { ok: false, suggestion };
+    return { status: 'corrected', message: suggestion };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    return { error: msg.includes('Network') || msg.includes('fetch') ? 'Нет сети' : msg };
+    return {
+      status: 'error',
+      message: msg.includes('Network') || msg.includes('fetch') ? 'Нет сети' : msg,
+    };
   }
 }
 
