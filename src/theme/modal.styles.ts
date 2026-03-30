@@ -12,10 +12,24 @@ export const modalStyles = StyleSheet.create({
 
   content: {
     borderRadius: 28,
-    padding: 28,
+    paddingTop: 28,
+    /** Как в компактной модалке Gemini: заметный зазор под рядом кнопок (у «длинных» модалок визуально съедался). */
+    paddingBottom: 44,
+    paddingHorizontal: 28,
     width: '86%',
     maxWidth: 360,
-    gap: 12,
+    alignSelf: 'center',
+    maxHeight: '88%',
+    gap: 8,
+    alignItems: 'stretch',
+  },
+  scrollWrap: {
+    width: '100%',
+    minWidth: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexGrow: 1,
+    paddingVertical: 12,
   },
 
   title: {
@@ -23,14 +37,24 @@ export const modalStyles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
     marginBottom: 10,
+    flexShrink: 1,
   },
 
   buttonsGroup: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'stretch',
+    width: '100%',
     marginTop: 8,
-    gap: 12,
+    gap: 8,
   },
 
-  iconButton: iconButtonStyles.iconButton,
+  /** Как под карточкой: 64×64, тень, без обводки — фон задаётся в экране (`palette.white`). */
+  iconButton: {
+    ...iconButtonStyles.iconButton,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 8,
+  },
 });

@@ -90,12 +90,56 @@ export const styles = StyleSheet.create({
 
   sectionTitle: { fontSize: 16, fontWeight: '700' },
 
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  tabsRow: {
+    flexDirection: 'row',
+    width: '100%',
+    alignSelf: 'stretch',
+  },
+
+  tabHalf: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderBottomWidth: 2,
+  },
+
+  stickySearchWrap: {
+    paddingVertical: 4,
+  },
+
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+
   searchInput: {
     height: 44,
     borderRadius: 22,
     borderWidth: 1,
     paddingHorizontal: 18,
     marginBottom: 8,
+  },
+
+  searchInputFlex: {
+    flex: 1,
+    marginBottom: 0,
+  },
+
+  scrollTopBtn: {
+    width: 44,
+    height: 44,
+    borderWidth: 1,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   geminiKeyInput: {
@@ -115,4 +159,30 @@ export const styles = StyleSheet.create({
   },
 
   rowText: { fontSize: 13, fontWeight: '500' },
+
+  rowWordPair: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexWrap: 'wrap',
+  },
+
+  folderAddBtn: {
+    width: 36,
+    height: 36,
+    borderWidth: 0,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+  },
+
+  folderWordRow: {
+    marginLeft: 12,
+    marginBottom: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
 });

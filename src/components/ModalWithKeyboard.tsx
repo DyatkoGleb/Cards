@@ -4,6 +4,7 @@ import {
   View,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { modalStyles } from '../theme/modal.styles';
 import type { Palette } from '../types/palette';
@@ -30,9 +31,16 @@ export function ModalWithKeyboard({
           keyboardVerticalOffset={Platform.OS === 'ios' ? keyboardVerticalOffset : 0}
           style={{ width: '100%', alignItems: 'center' }}
         >
-          <View style={[modalStyles.content, { backgroundColor: palette.white }]}>
-            {children}
-          </View>
+          <ScrollView
+            style={{ width: '100%' }}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={modalStyles.scrollWrap}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={[modalStyles.content, { backgroundColor: palette.white }]}>
+              {children}
+            </View>
+          </ScrollView>
         </KeyboardAvoidingView>
       </View>
     </Modal>

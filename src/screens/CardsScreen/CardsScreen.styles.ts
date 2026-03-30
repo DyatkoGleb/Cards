@@ -28,11 +28,30 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
+  setSelectorScroll: {
+    maxHeight: 48,
+  },
+
+  setSelectorScrollContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingRight: 8,
+  },
+
+  setPill: {
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+
   /* ---------- CARD ---------- */
   bigCard: {
     backgroundColor: '#ff0000',
     width: '100%',
-    height: 648,
+    flex: 1,
+    minHeight: 320,
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
@@ -46,6 +65,28 @@ export const styles = StyleSheet.create({
     fontSize: 42,
     fontWeight: '700',
     textAlign: 'center'
+  },
+
+  cardPressArea: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    width: '100%',
+  },
+
+  wordRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 15,
+  },
+
+  actionRow: {
+    display: 'flex',
+    flexDirection: 'row',
+    paddingVertical: 16,
+    gap: 20,
   },
 
   hint: {

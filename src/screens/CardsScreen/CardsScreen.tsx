@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,9 +7,12 @@ import {
   PanResponder,
   Pressable,
   Platform,
+  ScrollView,
+  Switch,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import type { WordPair } from '../../types/word';
+import type { Folder, TrainingSetSelection, WordPair } from '../../types/word';
 import type { Palette } from '../../types/palette';
 import { InputWithSuggestions } from '../../components/InputWithSuggestions';
 import {
@@ -23,13 +26,17 @@ import {
 import { FakeGradient } from '../../components/FakeGradient';
 import { ThemeToggle } from '../../components/ThemeToggle';
 import { ModalWithKeyboard } from '../../components/ModalWithKeyboard';
+import { FolderPickerField } from '../../components/FolderPickerField';
 import { SentenceCheckModal } from '../../components/SentenceCheckModal/SentenceCheckModal';
 import { useSuggestions } from '../../hooks/useSuggestions';
 import { useThemePersistence, persistTheme } from '../../hooks/useThemePersistence';
 import { pickWeightedIndex } from '../../utils/weightedRandom';
+import { A11Y } from '../../config/accessibility';
+import { TRAINING_MODE_FOLDER, TRAINING_MODE_GENERAL } from '../../config/featureFlags';
 import { modalStyles } from '../../theme/modal.styles';
 import { iconButtonStyles } from '../../theme/iconButton.styles';
 import { styles } from './CardsScreen.styles';
+import { CARDS_SWIPE_HINT_DISMISSED_KEY } from '../../utils/storageKeys';
 
 const CARD_ICON_SIZE = 32;
 const PRESS_ALPHA = 0.28;
@@ -73,8 +80,13 @@ type CardsScreenProps = {
     id: string,
     word: string,
     translation: string,
-    score: number
+    score: number,
+    options?: { folderIds?: string[]; showInGeneralSet?: boolean }
   ) => Promise<void>;
+  folders: Folder[];
+  selectedSet: TrainingSetSelection;
+  setSelectedSet: (next: TrainingSetSelection) => Promise<void>;
+  retryTranscription: (id: string) => Promise<void>;
 };
 
 export function CardsScreen({
@@ -84,6 +96,10 @@ export function CardsScreen({
   isDark,
   toggleTheme,
   editWord,
+  folders,
+  selectedSet,
+  setSelectedSet,
+  retryTranscription,
 }: CardsScreenProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showTranslation, setShowTranslation] = useState(false);
@@ -92,8 +108,22 @@ export function CardsScreen({
   const [editWordValue, setEditWordValue] = useState('');
   const [editTranslationValue, setEditTranslationValue] = useState('');
   const [editWordError, setEditWordError] = useState('');
+  const [editSelectedFolderId, setEditSelectedFolderId] = useState<string | null>(null);
+  const [editShowInGeneralSet, setEditShowInGeneralSet] = useState(true);
+  /** null = ещё не прочитали AsyncStorage; false = показываем подсказку до первого свайпа */
+  const [swipeHintDismissed, setSwipeHintDismissed] = useState<boolean | null>(null);
+  const swipeHintDismissedRef = useRef(false);
 
   const pan = useMemo(() => new Animated.ValueXY(), []);
+
+  useEffect(() => {
+    (async () => {
+      const raw = await AsyncStorage.getItem(CARDS_SWIPE_HINT_DISMISSED_KEY);
+      const dismissed = raw === 'true';
+      swipeHintDismissedRef.current = dismissed;
+      setSwipeHintDismissed(dismissed);
+    })();
+  }, []);
 
   useThemePersistence(isDark, toggleTheme);
 
@@ -106,37 +136,44 @@ export function CardsScreen({
     editTranslationValue
   );
 
-  useEffect(() => {
-    updateStreak();
-  }, []);
+  const activeWords = useMemo(() => {
+    if (selectedSet.mode === TRAINING_MODE_FOLDER && selectedSet.folderId) {
+      return words.filter(w => (w.folderIds ?? []).includes(selectedSet.folderId!));
+    }
+    return words.filter(w => w.showInGeneralSet !== false);
+  }, [words, selectedSet]);
 
-  useEffect(() => {
-    if (!words.length) return;
-    pickRandomCard();
-  }, [words]);
-
-  const pickRandomCard = (excludeCurrentIndex?: number) => {
-    if (!words.length) return;
+  const pickRandomCard = useCallback((excludeCurrentIndex?: number) => {
+    if (!activeWords.length) return;
     const exclude =
-      words.length > 2 && excludeCurrentIndex !== undefined
+      activeWords.length > 2 && excludeCurrentIndex !== undefined
         ? excludeCurrentIndex
         : undefined;
-    const index = pickWeightedIndex(words, exclude);
+    const index = pickWeightedIndex(activeWords, exclude);
     setCurrentIndex(index);
     setShowTranslation(Math.random() < 0.5);
-  };
+  }, [activeWords]);
+
+  useEffect(() => {
+    updateStreak();
+  }, [updateStreak]);
+
+  useEffect(() => {
+    if (!activeWords.length) return;
+    pickRandomCard();
+  }, [activeWords, selectedSet, pickRandomCard]);
 
   const setTheme = async (dark: boolean) => {
     await persistTheme(dark);
     toggleTheme();
   };
 
-  const safeIndex = words.length
-    ? Math.min(currentIndex, words.length - 1)
+  const safeIndex = activeWords.length
+    ? Math.min(currentIndex, activeWords.length - 1)
     : 0;
-  const currentPair = words[safeIndex];
+  const currentPair = activeWords[safeIndex];
 
-  const updateScore = async (delta: number) => {
+  const updateScore = useCallback(async (delta: number) => {
     if (!currentPair) return;
     const nextScore = Math.min(
       100,
@@ -149,12 +186,14 @@ export function CardsScreen({
       nextScore
     );
     pickRandomCard(safeIndex);
-  };
+  }, [currentPair, editWord, pickRandomCard, safeIndex]);
 
   const openEditModal = () => {
     if (!currentPair) return;
     setEditWordValue(currentPair.word);
     setEditTranslationValue(currentPair.translation);
+    setEditSelectedFolderId((currentPair.folderIds ?? [])[0] ?? null);
+    setEditShowInGeneralSet(currentPair.showInGeneralSet ?? true);
     setEditWordError('');
     setEditModalVisible(true);
   };
@@ -163,8 +202,22 @@ export function CardsScreen({
     setEditModalVisible(false);
     setEditWordValue('');
     setEditTranslationValue('');
+    setEditSelectedFolderId(null);
+    setEditShowInGeneralSet(true);
     setEditWordError('');
   };
+
+  const dismissSwipeHintAfterSwipe = useCallback(async () => {
+    if (swipeHintDismissedRef.current) return;
+    swipeHintDismissedRef.current = true;
+    setSwipeHintDismissed(true);
+    await AsyncStorage.setItem(CARDS_SWIPE_HINT_DISMISSED_KEY, 'true');
+  }, []);
+
+  const cardForEdit = useMemo(() => {
+    if (!editModalVisible || !currentPair) return null;
+    return words.find(w => w.id === currentPair.id) ?? currentPair;
+  }, [editModalVisible, currentPair, words]);
 
   const saveEdit = async () => {
     if (!currentPair) return;
@@ -175,7 +228,10 @@ export function CardsScreen({
       return;
     }
     setEditWordError('');
-    await editWord(currentPair.id, word, translation, currentPair.score ?? 0);
+    await editWord(currentPair.id, word, translation, currentPair.score ?? 0, {
+      folderIds: editSelectedFolderId ? [editSelectedFolderId] : [],
+      showInGeneralSet: editShowInGeneralSet,
+    });
     closeEditModal();
     pickRandomCard(safeIndex);
   };
@@ -189,15 +245,20 @@ export function CardsScreen({
           { useNativeDriver: false }
         ),
         onPanResponderRelease: (_, g) => {
-          if (g.dx > 80) updateScore(1);
-          else if (g.dx < -80) updateScore(-3);
+          const swipedKnow = g.dx > 80;
+          const swipedDontKnow = g.dx < -80;
+          if (swipedKnow || swipedDontKnow) {
+            void dismissSwipeHintAfterSwipe();
+          }
+          if (swipedKnow) updateScore(1);
+          else if (swipedDontKnow) updateScore(-3);
           Animated.spring(pan, {
             toValue: { x: 0, y: 0 },
             useNativeDriver: false,
           }).start();
         },
       }),
-    [currentIndex, words]
+    [pan, updateScore, dismissSwipeHintAfterSwipe]
   );
 
   return (
@@ -218,7 +279,45 @@ export function CardsScreen({
         />
       </View>
 
-      {!!words.length && (
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.setSelectorScroll}
+        contentContainerStyle={styles.setSelectorScrollContent}
+      >
+        <TouchableOpacity
+          accessibilityLabel={A11Y.cards.selectGeneral}
+          onPress={() => setSelectedSet({ mode: TRAINING_MODE_GENERAL, folderId: null })}
+          style={[styles.setPill, {
+            borderColor: selectedSet.mode === TRAINING_MODE_GENERAL ? palette.blueDeep : palette.borderStrong,
+            backgroundColor: selectedSet.mode === TRAINING_MODE_GENERAL ? palette.blueSoft : palette.white,
+          }]}
+        >
+          <Text style={{ color: palette.slate700 }}>General</Text>
+        </TouchableOpacity>
+        {folders.map(folder => {
+          const active =
+            selectedSet.mode === TRAINING_MODE_FOLDER &&
+            selectedSet.folderId === folder.id;
+          return (
+            <TouchableOpacity
+              key={folder.id}
+              accessibilityLabel={`${A11Y.cards.selectFolderPrefix} ${folder.name}`}
+              onPress={() =>
+                setSelectedSet({ mode: TRAINING_MODE_FOLDER, folderId: folder.id })
+              }
+              style={[styles.setPill, {
+                borderColor: active ? palette.blueDeep : palette.borderStrong,
+                backgroundColor: active ? palette.blueSoft : palette.white,
+              }]}
+            >
+              <Text style={{ color: palette.slate700 }}>{folder.name}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+
+      {!!activeWords.length && (
         <>
           <Animated.View
             {...panResponder.panHandlers}
@@ -264,14 +363,9 @@ export function CardsScreen({
             </Animated.View>
 
             <Pressable
-              style={{
-                flex: 1,
-                justifyContent: 'center',
-                alignItems: 'center',
-                paddingHorizontal: 20,
-                width: '100%',
-              }}
+              style={styles.cardPressArea}
               onPress={() => setShowTranslation(v => !v)}
+              accessibilityLabel={A11Y.cards.flip}
             >
               {(() => {
                 const displayText = showTranslation ? currentPair.translation : currentPair.word;
@@ -294,38 +388,52 @@ export function CardsScreen({
                     >
                       {displayText}
                     </Text>
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 6,
-                        marginTop: 15,
-                      }}
-                    >
-                      <IconArrowLeft size={14} color={palette.slate500} />
+                    {currentPair.transcription ? (
                       <Text
                         style={[
                           styles.hint,
-                          { color: palette.slate500, marginTop: 0 },
+                          {
+                            color: palette.slate500,
+                            marginTop: 8,
+                            fontSize: 15,
+                          },
                         ]}
                       >
-                        swipe / tap / swipe
+                        {currentPair.transcription}
                       </Text>
-                      <IconArrowRight size={14} color={palette.slate500} />
-                    </View>
+                    ) : null}
+                    {currentPair.transcriptionStatus === 'pending' ? (
+                      <Text style={[styles.hint, { color: palette.slate500, marginTop: 6 }]}>
+                        Looking up transcription...
+                      </Text>
+                    ) : null}
+                    {currentPair.transcriptionStatus === 'failed' ? (
+                      <TouchableOpacity onPress={() => retryTranscription(currentPair.id)}>
+                        <Text style={[styles.hint, { color: palette.blueDeep, marginTop: 6 }]}>
+                          Retry transcription
+                        </Text>
+                      </TouchableOpacity>
+                    ) : null}
+                    {swipeHintDismissed === false ? (
+                      <View style={[styles.wordRow, { marginTop: 10 }]}>
+                        <IconArrowLeft size={14} color={palette.slate500} />
+                        <Text
+                          style={[
+                            styles.hint,
+                            { color: palette.slate500, marginTop: 0 },
+                          ]}
+                        >
+                          swipe / tap / swipe
+                        </Text>
+                        <IconArrowRight size={14} color={palette.slate500} />
+                      </View>
+                    ) : null}
                   </>
                 );
               })()}
             </Pressable>
 
-            <View
-              style={{
-                display: 'flex',
-                flexDirection: 'row',
-                paddingVertical: 16,
-                gap: 20,
-              }}
-            >
+            <View style={styles.actionRow}>
               <Pressable
                 style={({ pressed }) => [
                   iconButtonStyles.iconButton,
@@ -340,6 +448,7 @@ export function CardsScreen({
                   },
                 ]}
                 onPress={() => updateScore(-3)}
+                accessibilityLabel={A11Y.cards.markDontKnow}
               >
                 <IconClose size={CARD_ICON_SIZE} color={palette.slate700} />
               </Pressable>
@@ -353,6 +462,7 @@ export function CardsScreen({
                   },
                 ]}
                 onPress={openEditModal}
+                accessibilityLabel={A11Y.cards.edit}
               >
                 <IconEdit size={CARD_ICON_SIZE} color={palette.slate700} />
               </TouchableOpacity>
@@ -366,6 +476,7 @@ export function CardsScreen({
                   },
                 ]}
                 onPress={() => setSentenceCheckVisible(true)}
+                accessibilityLabel={A11Y.cards.sentenceCheck}
               >
                 <IconChat size={CARD_ICON_SIZE} color={palette.slate700} />
               </TouchableOpacity>
@@ -383,6 +494,7 @@ export function CardsScreen({
                   },
                 ]}
                 onPress={() => updateScore(1)}
+                accessibilityLabel={A11Y.cards.markKnow}
               >
                 <IconCheck size={CARD_ICON_SIZE} color={palette.slate700} />
               </Pressable>
@@ -406,6 +518,7 @@ export function CardsScreen({
               palette={palette}
               error={editWordError}
               keyboardType="ascii-capable"
+              compact
             />
             <InputWithSuggestions
               value={editTranslationValue}
@@ -414,15 +527,43 @@ export function CardsScreen({
               suggestions={translationSuggestions}
               onSelect={setEditTranslationValue}
               palette={palette}
+              compact
             />
+            <FolderPickerField
+              folders={folders}
+              selectedFolderId={editSelectedFolderId}
+              onSelect={setEditSelectedFolderId}
+              palette={palette}
+              compact
+            />
+            {cardForEdit?.transcription ? (
+              <Text
+                style={[styles.hint, { color: palette.slate500, textAlign: 'center', marginTop: 4 }]}
+              >
+                {cardForEdit.transcription}
+              </Text>
+            ) : null}
+            {cardForEdit?.transcriptionStatus === 'pending' ? (
+              <Text style={[styles.hint, { color: palette.slate500, textAlign: 'center' }]}>
+                Looking up transcription...
+              </Text>
+            ) : null}
+            {cardForEdit?.transcriptionStatus === 'failed' ? (
+              <TouchableOpacity onPress={() => cardForEdit && retryTranscription(cardForEdit.id)}>
+                <Text style={[styles.hint, { color: palette.blueDeep, textAlign: 'center' }]}>
+                  Retry transcription
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={[styles.hint, { color: palette.slate700 }]}>Show in general set</Text>
+              <Switch value={editShowInGeneralSet} onValueChange={setEditShowInGeneralSet} />
+            </View>
             <View style={modalStyles.buttonsGroup}>
               <TouchableOpacity
                 style={[
                   modalStyles.iconButton,
-                  {
-                    backgroundColor: palette.white,
-                    borderColor: palette.borderStrong,
-                  },
+                  { backgroundColor: palette.white },
                 ]}
                 onPress={closeEditModal}
               >
@@ -431,10 +572,7 @@ export function CardsScreen({
               <TouchableOpacity
                 style={[
                   modalStyles.iconButton,
-                  {
-                    backgroundColor: palette.white,
-                    borderColor: palette.borderStrong,
-                  },
+                  { backgroundColor: palette.white },
                 ]}
                 onPress={saveEdit}
               >

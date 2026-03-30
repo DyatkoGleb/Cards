@@ -17,7 +17,7 @@ export function useThemePersistence(
       if (saved === 'dark' && !isDark) toggleTheme();
       if (saved === 'light' && isDark) toggleTheme();
     })();
-  }, []);
+  }, [isDark, toggleTheme]);
 }
 
 /**

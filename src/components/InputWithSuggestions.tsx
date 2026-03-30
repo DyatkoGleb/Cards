@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 
 import type { Palette } from '../types/palette';
+import { inputFieldStyles } from '../theme/inputField.styles';
 
 type Props = {
   value: string;
@@ -22,6 +23,8 @@ type Props = {
   error?: string;
   keyboardType?: KeyboardTypeOptions;
   autofocus?: boolean;
+  /** Уменьшенные отступы для модалок */
+  compact?: boolean;
 };
 
 export const InputWithSuggestions = ({
@@ -33,7 +36,8 @@ export const InputWithSuggestions = ({
   palette,
   error,
   keyboardType,
-  autofocus = false
+  autofocus = false,
+  compact = false,
 }: Props) => {
   const [isFocused, setIsFocused] = useState(false);
   const [_, setKeyboardHeight] = useState(0);
@@ -54,7 +58,13 @@ export const InputWithSuggestions = ({
   }, []);
 
   return (
-    <View ref={containerRef} style={{ position: 'relative', marginBottom: 10 }}>
+    <View
+      ref={containerRef}
+      style={[
+        { position: 'relative' },
+        compact ? inputFieldStyles.inputWrapCompact : inputFieldStyles.inputWrapDefault,
+      ]}
+    >
       <TextInput
         value={value}
         onChangeText={onChangeText}
@@ -62,6 +72,7 @@ export const InputWithSuggestions = ({
         placeholderTextColor={palette.slate400}
         style={[
           styles.input,
+          compact && styles.inputCompact,
           {
             borderColor: error ? palette.red : palette.border,
             color: palette.slate900,
@@ -80,6 +91,7 @@ export const InputWithSuggestions = ({
         <View
           style={[
             styles.suggestionsContainer,
+            compact && styles.suggestionsContainerCompact,
             {
               backgroundColor: palette.white,
               borderColor: palette.border,
@@ -119,6 +131,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     fontSize: 16,
   },
+  inputCompact: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
   errorText: {
     marginTop: 4,
     fontSize: 12,
@@ -136,6 +152,9 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
     elevation: 6,
+  },
+  suggestionsContainerCompact: {
+    top: 48,
   },
   suggestionItem: {
     paddingVertical: 12,

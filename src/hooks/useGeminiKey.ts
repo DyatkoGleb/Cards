@@ -31,10 +31,14 @@ export function useGeminiKey(): [
     const trimmed = value.trim();
     setKey(trimmed);
     setGeminiKey(trimmed);
-    if (trimmed) {
-      await AsyncStorage.setItem(GEMINI_API_KEY_STORAGE, trimmed);
-    } else {
-      await AsyncStorage.removeItem(GEMINI_API_KEY_STORAGE);
+    try {
+      if (trimmed) {
+        await AsyncStorage.setItem(GEMINI_API_KEY_STORAGE, trimmed);
+      } else {
+        await AsyncStorage.removeItem(GEMINI_API_KEY_STORAGE);
+      }
+    } catch {
+      // Keep in-memory key even if persistence is temporarily unavailable.
     }
   }, []);
 

@@ -19,9 +19,22 @@ export function BottomTabs({
   addWord,
   deleteWord,
   editWord,
+  addFolder,
+  folders,
+  selectedSet,
+  setSelectedSet,
   updateStreak,
+  retryTranscription,
 }: AppNavigatorProps) {
   const [addModalVisible, setAddModalVisible] = useState(false);
+  const [prefillWord, setPrefillWord] = useState('');
+  const [prefillTranslation, setPrefillTranslation] = useState('');
+
+  const openAddWordModal = (prefill?: { word?: string; translation?: string }) => {
+    setPrefillWord(prefill?.word ?? '');
+    setPrefillTranslation(prefill?.translation ?? '');
+    setAddModalVisible(true);
+  };
   
   return (
     <>
@@ -64,6 +77,10 @@ export function BottomTabs({
               isDark={isDark}
               toggleTheme={toggleTheme}
               editWord={editWord}
+              folders={folders}
+              selectedSet={selectedSet}
+              setSelectedSet={setSelectedSet}
+              retryTranscription={retryTranscription}
             />
           )}
         </Tab.Screen>
@@ -80,7 +97,7 @@ export function BottomTabs({
                   transform: [{ translateX: '-50%' }],
                 }}
               >
-                <AddWordButton onPress={() => setAddModalVisible(true)} palette={palette} />
+                <AddWordButton onPress={() => openAddWordModal()} palette={palette} />
               </View>
             ),
           }}
@@ -101,7 +118,11 @@ export function BottomTabs({
               stats={stats}
               deleteWord={deleteWord}
               editWord={editWord}
+              addFolder={addFolder}
+              folders={folders}
               palette={palette}
+              onRequestAddWord={openAddWordModal}
+              retryTranscription={retryTranscription}
             />
           )}
         </Tab.Screen>
@@ -114,6 +135,9 @@ export function BottomTabs({
         palette={palette}
         addWord={addWord}
         editWord={editWord}
+        folders={folders}
+        initialWord={prefillWord}
+        initialTranslation={prefillTranslation}
       />
     </>
   );

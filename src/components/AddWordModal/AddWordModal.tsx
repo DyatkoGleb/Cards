@@ -1,40 +1,60 @@
-import React, { useMemo, useState } from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Switch, Text, TouchableOpacity, View } from 'react-native';
 import { InputWithSuggestions } from '../InputWithSuggestions';
+import { FolderPickerField } from '../FolderPickerField';
 import { ModalWithKeyboard } from '../ModalWithKeyboard';
 import { IconClose, IconCheck } from '../Icons';
 import { useSuggestions } from '../../hooks/useSuggestions';
 import { modalStyles } from '../../theme/modal.styles';
-import type { WordPair } from '../../types/word';
+import type { Folder, WordPair } from '../../types/word';
 import type { Palette } from '../../types/palette';
 
 const MODAL_ICON_SIZE = 28;
 
 export type AddWordModalProps = {
   words: WordPair[];
+  folders: Folder[];
   visible: boolean;
   onClose: () => void;
   palette: Palette;
-  addWord: (word: string, translation: string) => Promise<WordPair | void>;
+  initialWord?: string;
+  initialTranslation?: string;
+  addWord: (
+    word: string,
+    translation: string,
+    options?: { folderIds?: string[]; showInGeneralSet?: boolean }
+  ) => Promise<WordPair | void>;
   editWord: (
     id: string,
     word: string,
     translation: string,
-    score?: number
+    score?: number,
+    options?: { folderIds?: string[]; showInGeneralSet?: boolean }
   ) => Promise<void>;
 };
 
 export function AddWordModal({
   words,
+  folders,
   visible,
   onClose,
   palette,
+  initialWord,
+  initialTranslation,
   addWord,
   editWord,
 }: AddWordModalProps) {
   const [newWord, setNewWord] = useState('');
   const [wordError, setWordError] = useState('');
   const [newTranslation, setNewTranslation] = useState('');
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [showInGeneralSet, setShowInGeneralSet] = useState(true);
+
+  useEffect(() => {
+    if (!visible) return;
+    setNewWord(initialWord ?? '');
+    setNewTranslation(initialTranslation ?? '');
+  }, [visible, initialWord, initialTranslation]);
 
   const wordSuggestions = useSuggestions(
     words.map(w => w.word),
@@ -65,19 +85,28 @@ export function AddWordModal({
         existingWord.id,
         word,
         translation,
-        existingWord.score ?? 0
+        existingWord.score ?? 0,
+        {
+          folderIds: selectedFolderId ? [selectedFolderId] : [],
+          showInGeneralSet,
+        }
       );
       closeModal();
       return;
     }
 
-    await addWord(word, translation);
+    await addWord(word, translation, {
+      folderIds: selectedFolderId ? [selectedFolderId] : [],
+      showInGeneralSet,
+    });
     closeModal();
   };
 
   const closeModal = () => {
     setNewWord('');
     setNewTranslation('');
+    setSelectedFolderId(null);
+    setShowInGeneralSet(true);
     setWordError('');
     onClose();
   };
@@ -97,6 +126,7 @@ export function AddWordModal({
         error={wordError}
         keyboardType="ascii-capable"
         autofocus
+        compact
       />
       <InputWithSuggestions
         value={newTranslation}
@@ -105,15 +135,24 @@ export function AddWordModal({
         suggestions={translationSuggestions}
         onSelect={setNewTranslation}
         palette={palette}
+        compact
       />
+      <FolderPickerField
+        folders={folders}
+        selectedFolderId={selectedFolderId}
+        onSelect={setSelectedFolderId}
+        palette={palette}
+        compact
+      />
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <Text style={{ color: palette.slate700 }}>Show in general set</Text>
+        <Switch value={showInGeneralSet} onValueChange={setShowInGeneralSet} />
+      </View>
       <View style={modalStyles.buttonsGroup}>
         <TouchableOpacity
           style={[
             modalStyles.iconButton,
-            {
-              backgroundColor: palette.white,
-              borderColor: palette.borderStrong,
-            },
+            { backgroundColor: palette.white },
           ]}
           onPress={closeModal}
         >
@@ -122,10 +161,7 @@ export function AddWordModal({
         <TouchableOpacity
           style={[
             modalStyles.iconButton,
-            {
-              backgroundColor: palette.white,
-              borderColor: palette.borderStrong,
-            },
+            { backgroundColor: palette.white },
           ]}
           onPress={handleAdd}
         >
